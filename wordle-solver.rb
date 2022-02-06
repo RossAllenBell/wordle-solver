@@ -1,4 +1,6 @@
 if ARGV.length == 0
+  puts "Usage: ruby wordle-solver.rb 'ra*ise!'"
+  puts '* means present somewhere, ! means present in position)'
   puts 'Guess: raise'
   exit
 end
