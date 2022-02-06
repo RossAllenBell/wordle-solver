@@ -189,4 +189,4 @@ end.sort_by do |guess|
   [-guess.word_position_value(possible_solutions: @possible_solution_words), guess.word]
 end
 
-puts "Guess using letter positions: #{best_guesses.first}"
+puts "Best guess using letter positions: #{best_guesses.first}"
