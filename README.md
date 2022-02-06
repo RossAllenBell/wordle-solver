@@ -1,0 +1,3 @@
+```
+ruby wordle-solver.rb
+```
