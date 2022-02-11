@@ -1,7 +1,7 @@
 if ARGV.length == 0
-  puts "Usage: ruby wordle-solver.rb 'ra*ise!'"
+  puts "Usage: ruby wordle-solver.rb 'ro*ate!'"
   puts '* means present somewhere, ! means present in position'
-  puts 'Guess: raise'
+  puts 'Guess: roate'
   exit
 end
 
@@ -39,12 +39,17 @@ class Guess
     responses
   end
 
-  def largest_allowed_set_size(possible_solutions:, stop_after:)
-    self.all_possible_responses.reduce(0) do |size, response|
-      size = [response.allowed_set_size(possible_solutions: possible_solutions, stop_after: stop_after), size].max
-      break size if size > stop_after
-      size
+  def average_set_size(possible_solutions:)
+    responses_to_solutions = possible_solutions.reduce({}) do |hsh, word|
+      response = Response.from_guess_and_solution(guess: self, solution: word)
+      hsh[response] ||= []
+      hsh[response] << word
+      hsh
     end
+
+    raise 'unexpected state' if possible_solutions.size != responses_to_solutions.values.map(&:size).sum
+
+    return responses_to_solutions.values.map{|a| a.size * a.size}.sum / possible_solutions.size.to_f
   end
 
   def word_position_value(possible_solutions:)
@@ -109,10 +114,9 @@ class Response
     return true
   end
 
-  def allowed_set_size(possible_solutions:, stop_after:)
+  def allowed_set_size(possible_solutions:)
     possible_solutions.reduce(0) do |size, word|
       size += 1 if self.allows?(word: word)
-      break size if size > stop_after
       size
     end
   end
@@ -131,6 +135,32 @@ class Response
         '!'
       end
     end
+  end
+
+  def self.from_guess_and_solution(guess:, solution:)
+    slots = guess.word.split('').map.with_index do |char, index|
+      if char == solution[index]
+        Slots::Correct
+      elsif solution.include?(char) && (index == 0 || !guess.word[0..(index - 1)].include?(char))
+        Slots::PresentElsewhere
+      else
+        Slots::NotPresent
+      end
+    end
+
+    return Response.new(guess: guess, slots: slots)
+  end
+
+  def ==(other)
+    return self.to_s == other.to_s
+  end
+
+  def eql?(other)
+    return self == other
+  end
+
+  def hash
+    self.to_s.hash
   end
 end
 
@@ -159,11 +189,34 @@ elsif @possible_solution_words.size <= 10
   puts "Possible remaining solutions: #{@possible_solution_words.join(', ')}"
 end
 
+CORE_COUNT = 8
+guesses_by_thread_index = {}
+
+ALL_POSSIBLE_GUESSES.each_with_index do |guess_word, index|
+  guesses_by_thread_index[index % (CORE_COUNT)] ||= []
+  guesses_by_thread_index[index % (CORE_COUNT)] << guess_word
+end
+
+guesses_to_average_size = {}
+
+threads = guesses_by_thread_index.keys.map do |thread_index|
+  Thread.new do
+    guesses_by_thread_index[thread_index].each do |guess|
+      guesses_to_average_size[guess] = Guess.new(word: guess).average_set_size(possible_solutions: @possible_solution_words)
+      print '.'
+    end
+  end
+end
+
+threads.each(&:join)
+
+puts ''
+
 best_guesses = nil
 best_guesses_size = @possible_solution_words.size + 1
 
 ALL_POSSIBLE_GUESSES.each do |guess_word|
-  size = Guess.new(word: guess_word).largest_allowed_set_size(possible_solutions: @possible_solution_words, stop_after: best_guesses_size)
+  size = guesses_to_average_size[guess_word]
 
   if size <= best_guesses_size
     best_guesses = [] if size < best_guesses_size
@@ -172,21 +225,19 @@ ALL_POSSIBLE_GUESSES.each do |guess_word|
 
     best_guesses << guess_word
 
-    if size > 10
-      puts ''
-      puts "#{best_guesses_size}: #{best_guesses.join(', ')}"
-    end
+    puts "#{best_guesses_size}: #{best_guesses.join(', ')}"
   end
-
-  print '.'
 end
-puts ''
 puts "Best guess possible remaining solutions size: #{best_guesses_size}"
 
 best_guesses = best_guesses.map do |word|
   Guess.new(word: word)
 end.sort_by do |guess|
-  [-guess.word_position_value(possible_solutions: @possible_solution_words), guess.word]
+  [
+    @possible_solution_words.include?(guess.word) ? 0 : 1,
+    -guess.word_position_value(possible_solutions: @possible_solution_words),
+    guess.word,
+  ]
 end
 
-puts "Best guess using letter positions: #{best_guesses.first}"
+puts "Best guess: #{best_guesses.first}"
