@@ -225,7 +225,7 @@ ALL_POSSIBLE_GUESSES.each do |guess_word|
 
     best_guesses << guess_word
 
-    puts "#{best_guesses_size}: #{best_guesses.join(', ')}"
+    # puts "#{'%.2f' % best_guesses_size}: #{best_guesses.join(', ')}"
   end
 end
 puts "Best guess possible remaining solutions size: #{best_guesses_size}"
