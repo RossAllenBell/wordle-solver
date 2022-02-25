@@ -212,25 +212,25 @@ threads.each(&:join)
 
 puts ''
 
-best_guesses = nil
-best_guesses_size = @possible_solution_words.size + 1
+my_best_guesses = nil
+my_best_guesses_size = @possible_solution_words.size + 1
 
 ALL_POSSIBLE_GUESSES.each do |guess_word|
   size = guesses_to_average_size[guess_word]
 
-  if size <= best_guesses_size
-    best_guesses = [] if size < best_guesses_size
+  if size <= my_best_guesses_size
+    my_best_guesses = [] if size < my_best_guesses_size
 
-    best_guesses_size = size
+    my_best_guesses_size = size
 
-    best_guesses << guess_word
+    my_best_guesses << guess_word
 
-    # puts "#{'%.2f' % best_guesses_size}: #{best_guesses.join(', ')}"
+    # puts "#{'%.2f' % my_best_guesses_size}: #{my_best_guesses.join(', ')}"
   end
 end
-puts "Best guess possible remaining solutions size: #{best_guesses_size}"
+puts "Best guess possible remaining solutions size: #{my_best_guesses_size}"
 
-best_guesses = best_guesses.map do |word|
+my_best_guesses = my_best_guesses.map do |word|
   Guess.new(word: word)
 end.sort_by do |guess|
   [
@@ -240,4 +240,4 @@ end.sort_by do |guess|
   ]
 end
 
-puts "Best guess: #{best_guesses.first}"
+puts "My Best guess: #{my_best_guesses.first}"
