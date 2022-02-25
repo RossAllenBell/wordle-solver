@@ -60,19 +60,19 @@ ALL_POSSIBLE_GUESSES.each do |word|
   word_values[word] = word_letter_value(word)
 end
 
-best_guesses_score = word_values.values.max
-best_guesses = word_values.to_a.select{ |w,s| s == best_guesses_score }.map(&:first).sort
-puts "Best guesses by letter values: #{best_guesses.join(', ')}"
+probably_not_the_best_guesses_score = word_values.values.max
+probably_not_the_best_guesses = word_values.to_a.select{ |w,s| s == probably_not_the_best_guesses_score }.map(&:first).sort
+puts "Best guesses by letter values: #{probably_not_the_best_guesses.join(', ')}"
 
-best_guesses_by_position = {}
-# best_guesses.each do |word|
+probably_not_the_best_guesses_by_position = {}
+# probably_not_the_best_guesses.each do |word|
 ['aesir', 'arise', 'raise', 'reais', 'serai'].each do |word|
-  best_guesses_by_position[word] = word_position_value(word)
+  probably_not_the_best_guesses_by_position[word] = word_position_value(word)
 end
-best_guesses_by_position_score = best_guesses_by_position.values.max
-best_guesses_by_position = best_guesses_by_position.to_a.select{ |w,s| s == best_guesses_by_position_score }.map(&:first).sort
+probably_not_the_best_guesses_by_position_score = probably_not_the_best_guesses_by_position.values.max
+probably_not_the_best_guesses_by_position = probably_not_the_best_guesses_by_position.to_a.select{ |w,s| s == probably_not_the_best_guesses_by_position_score }.map(&:first).sort
 
-puts "Best guesses by letter positions: #{best_guesses_by_position.join(', ')}"
+puts "(Probably not the) best guesses by letter positions: #{probably_not_the_best_guesses_by_position.join(', ')}"
 
 if ARGV.length == 0
   puts 'Provide clue input like: ro*ate! (* means present somewhere, ! means present in position)'
